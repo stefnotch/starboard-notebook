@@ -1,20 +1,26 @@
 const path = require("path");
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 
-const webpack = require('webpack')
+const webpack = require("webpack");
 
 const pkg = require("./package.json");
 
 const baseConfig = {
-    entry: ['./src/publicPath.ts', './src/main.ts'],
-    output: {
-        path: path.resolve(__dirname, 'dist/'),
-        filename: "starboard-notebook.js",
-        chunkFilename: '[name].chunk.js',
+  entry: ["./src/publicPath.ts", "./src/main.ts"],
+  output: {
+    path: path.resolve(__dirname, "dist/"),
+    filename: "starboard-notebook.js",
+    chunkFilename: "[name].chunk.js",
+  },
+  resolve: {
+    extensions: [".ts", ".tsx", ".js", ".d.ts"],
+    alias: {
+      react: path.resolve("./node_modules/preact/compat"),
+      "react-dom": path.resolve("./node_modules/preact/compat"),
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.js', '.d.ts'],
@@ -95,32 +101,57 @@ const baseConfig = {
             ]
         }),
     ],
-    devServer: {
-        contentBase: path.join(__dirname, './dist/'),
-        compress: true,
-        port: 9001,
-        hot: true,
-        historyApiFallback: false
-    },
-}
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      title: "Starboard Notebook",
+      favicon: "static/favicon.ico",
+    }),
+    new MiniCssExtractPlugin({
+      filename: "starboard-notebook.css",
+    }),
+    new webpack.DefinePlugin({
+      STARBOARD_NOTEBOOK_VERSION: JSON.stringify(pkg.version),
+    }),
+    new MonacoWebpackPlugin({
+      languages: [
+        "markdown",
+        "html",
+        "css",
+        "javascript",
+        "typescript",
+        "python",
+        "coffee",
+      ],
+      features: ["!toggleHighContrast", "!gotoSymbol"],
+    }),
+  ],
+  devServer: {
+    contentBase: path.join(__dirname, "./dist/"),
+    compress: true,
+    port: 9001,
+    hot: true,
+    historyApiFallback: false,
+  },
+};
 
 module.exports = (env, argv) => {
-    const config = baseConfig;
+  const config = baseConfig;
 
-    if (argv.mode === "development") {
-        config.devtool = 'inline-source-map'
-        config.output.publicPath = "/"
+  if (argv.mode === "development") {
+    config.devtool = "inline-source-map";
+    config.output.publicPath = "/";
 
-        // We add it here so that in a production build it fails to import notebooks
-        config.module.rules.push({
-            test: /\.(nb|sbnb)$/,
-            use: 'raw-loader',
-        })
-    }
+    // We add it here so that in a production build it fails to import notebooks
+    config.module.rules.push({
+      test: /\.(nb|sbnb)$/,
+      use: "raw-loader",
+    });
+  }
 
-    if (argv.stats) {
-        config.stats = argv.stats
-    }
+  if (argv.stats) {
+    config.stats = argv.stats;
+  }
 
-    return config;
+  return config;
 };
