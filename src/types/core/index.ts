@@ -142,6 +142,12 @@ export interface CellHandler {
    * Clear the output of the cell.
    */
   clear(): void;
+
+  /**
+   * If the cell-type will handle a certain shortcut itself
+   * Lets you nicely encode things like: "I have a popup open, therefore I'll handle the esc shortcut myself"
+   */
+  willHandleShortcut(keyboardEvent: KeyboardEvent): boolean;
 }
 
 export interface CellCreationInterface {

@@ -30,4 +30,8 @@ export abstract class BaseCellHandler implements CellHandler {
   clear(): void {
     return;
   }
+
+  willHandleShortcut(event: KeyboardEvent) {
+    return false;
+  }
 }

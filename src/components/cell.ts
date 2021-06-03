@@ -10,7 +10,7 @@ import { BaseCellHandler } from "../cellTypes/base";
 import { getAvailableCellTypes, getCellTypeDefinitionForCellType } from "../cellTypes/registry";
 
 import { getPropertiesIcons, getPropertiesPopoverIcons } from "./controls";
-import { Cell, CellTypeDefinition, Runtime } from "../types";
+import { Cell, CellHandler, CellTypeDefinition, Runtime } from "../types";
 import "./insertionLine";
 
 import Dropdown from "bootstrap/js/dist/dropdown";
@@ -29,7 +29,7 @@ export class CellElement extends LitElement {
   private bottomControlsElement!: HTMLElement;
 
   public cellTypeDefinition!: CellTypeDefinition;
-  public cellHandler!: BaseCellHandler;
+  public cellHandler!: CellHandler;
 
   @property({ type: Object })
   public cell: Cell;
@@ -68,26 +68,58 @@ export class CellElement extends LitElement {
 
   firstUpdated(changedProperties: any) {
     super.firstUpdated(changedProperties);
-    this.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        if (event.ctrlKey) {
-          this.runtime.controls.emit({ id: this.cell.id, type: "RUN_CELL" });
-        } else if (event.shiftKey) {
+
+    this.addEventListener(
+      "keydown",
+      (event) => {
+        console.log(event.key, this.cell.textContent);
+
+        if (event.key === "Enter") {
+          if (event.ctrlKey && !this.cellHandler.willHandleShortcut?.(event)) {
+            this.runtime.controls.emit({ id: this.cell.id, type: "RUN_CELL" });
+            event.stopPropagation();
+            // event.preventDefault();
+          } else if (event.shiftKey && !this.cellHandler.willHandleShortcut?.(event)) {
+            this.runtime.controls.emit({
+              id: this.cell.id,
+              type: "RUN_CELL",
+              focus: "next",
+            });
+            event.stopPropagation();
+          } else if (event.altKey && !this.cellHandler.willHandleShortcut?.(event)) {
+            this.runtime.controls.emit({
+              id: this.cell.id,
+              type: "RUN_CELL",
+              focus: "next",
+              insertNewCell: true,
+            });
+            event.stopPropagation();
+          }
+        } else if (
+          event.key === "Backspace" &&
+          !this.cellHandler.willHandleShortcut?.(event) &&
+          (this.cell.textContent == null || this.cell.textContent == "")
+        ) {
           this.runtime.controls.emit({
             id: this.cell.id,
-            type: "RUN_CELL",
-            focus: "next",
+            type: "REMOVE_CELL",
           });
-        } else if (event.altKey) {
-          this.runtime.controls.emit({
-            id: this.cell.id,
-            type: "RUN_CELL",
-            focus: "next",
-            insertNewCell: true,
-          });
+          event.stopPropagation();
         }
-      }
-    });
+      },
+      true
+    );
+
+    /* TODO: Maybe also prevent those
+    this.addEventListener(
+      "keyup",
+      (event) => {
+        if (event.key === "Backspace" && (this.textContent == null || this.textContent == "")) {
+          event.stopPropagation();
+        }
+      },
+      true
+    );*/
 
     [].slice.call(document.querySelectorAll(".dropdown-toggle")).map((e) => new Dropdown(e));
 

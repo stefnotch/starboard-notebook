@@ -82,35 +82,6 @@ function addEditorKeyboardShortcuts(
   cellId: string,
   isCellEmpty: () => boolean
 ) {
-  editor.addAction({
-    id: "run-cell",
-    label: "Run Cell",
-    keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
-
-    contextMenuGroupId: "starboard",
-    contextMenuOrder: 0,
-    run: (_ed) =>
-      emit({
-        id: cellId,
-        type: "RUN_CELL",
-      }),
-  });
-
-  editor.addAction({
-    id: "run-cell-and-next",
-    label: "Run Cell and Select Below",
-    keybindings: [monaco.KeyMod.Shift | monaco.KeyCode.Enter],
-
-    contextMenuGroupId: "starboard",
-    contextMenuOrder: 1,
-    run: (_ed) =>
-      emit({
-        id: cellId,
-        type: "RUN_CELL",
-        focus: "next",
-      }),
-  });
-
   editor.onKeyDown((e) => {
     if (e.keyCode === monaco.KeyCode.DownArrow) {
       const lastLine = editor.getModel()?.getLineCount();
@@ -129,31 +100,7 @@ function addEditorKeyboardShortcuts(
           focus: "previous",
         });
       }
-    } else if (e.keyCode === monaco.KeyCode.Backspace) {
-      // Check if we're at the beginning, only then check the actual contents
-      if (editor.getModel()?.getLineCount() === 1 && editor.getPosition()?.column === 1 && isCellEmpty()) {
-        emit({
-          id: cellId,
-          type: "REMOVE_CELL",
-        });
-      }
     }
-  });
-
-  editor.addAction({
-    id: "run-cell-and-insert-cell",
-    label: "Run Cell and Insert Cell",
-    keybindings: [monaco.KeyMod.Alt | monaco.KeyCode.Enter],
-
-    contextMenuGroupId: "starboard",
-    contextMenuOrder: 2,
-    run: (_ed) =>
-      emit({
-        id: cellId,
-        type: "RUN_CELL",
-        focus: "next",
-        insertNewCell: true,
-      }),
   });
 }
 
